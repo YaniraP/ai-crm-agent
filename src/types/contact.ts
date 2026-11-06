@@ -1,4 +1,5 @@
 export type Contact = {
+  id: string; // string form of the database id; no MongoDB types here
   name: string;
   company: string;
   notes: string;

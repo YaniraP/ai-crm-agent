@@ -1,4 +1,5 @@
 export type Contact = {
+  id: string; // text form of the database id; no Postgres types here
   name: string;
   company: string;
   notes: string;

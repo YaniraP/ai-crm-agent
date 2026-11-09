@@ -6,19 +6,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:schema": "tsx --env-file=.env.local scripts/apply-schema.ts",
+    "seed:contacts": "tsx --env-file=.env.local scripts/seed-contacts.ts"
   },
   "dependencies": {
     "next": "16.4.4",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

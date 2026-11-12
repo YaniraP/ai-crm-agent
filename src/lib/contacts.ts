@@ -6,9 +6,9 @@ import type { Contact } from "@/types/contact";
 type ContactRow = {
   id: string; // uuid comes back from pg as a string
   name: string;
-  company: string;
+  company: string | null;
   notes: string;
-  last_contacted: string; // cast to text in SQL, e.g. "2026-10-15"
+  last_contacted: string | null; // cast to text in SQL, e.g. "2026-10-15"
 };
 
 function toContact(row: ContactRow): Contact {

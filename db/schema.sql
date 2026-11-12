@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS contacts (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name           text NOT NULL, -- not unique: names can repeat
-  company        text NOT NULL,
+  company        text, -- optional (NULL allowed)
   notes          text NOT NULL DEFAULT '',
-  last_contacted date NOT NULL
+  last_contacted date -- optional (NULL allowed)
 );

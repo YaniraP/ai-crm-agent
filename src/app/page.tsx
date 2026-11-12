@@ -12,11 +12,13 @@ async function ContactList() {
     <ul>
       {contacts.map((contact) => (
         <li key={contact.id}>
-          <strong>{contact.name}</strong> — {contact.company}
+          <strong>{contact.name}</strong> {contact.company ? <>— {contact.company}</> : null}
           <br />
           {contact.notes}
-          <br />
-          Last contacted: {contact.lastContacted}
+          {contact.lastContacted ?
+            <>
+              <br />
+              Last contacted: {contact.lastContacted}</> : null}
         </li>
       ))}
     </ul>

@@ -1,0 +1,3 @@
+ALTER TABLE contacts
+  ALTER COLUMN company DROP NOT NULL,
+  ALTER COLUMN last_contacted DROP NOT NULL;

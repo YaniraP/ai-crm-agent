@@ -1,4 +1,4 @@
-import { Pool, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 // The only place that connects to Postgres. Used by the app and by scripts,
 // so it must not import anything from Next.js.
@@ -32,6 +32,26 @@ export async function query<Row extends QueryResultRow>(
 ): Promise<Row[]> {
   const result = await getPool().query<Row>(sql, params);
   return result.rows;
+}
+
+// Runs fn inside one transaction on one dedicated connection.
+// pool.query() may use a different connection per call, so BEGIN/COMMIT
+// must go through the same client. Everything in fn commits, or nothing does.
+export async function withTransaction<T>(
+  fn: (client: PoolClient) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query("BEGIN");
+    const result = await fn(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release(); // always return the connection to the pool
+  }
 }
 
 // Used by scripts so the Node process can exit.

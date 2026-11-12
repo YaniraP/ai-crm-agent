@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:schema": "tsx --env-file=.env.local scripts/apply-schema.ts",
+    "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
     "seed:contacts": "tsx --env-file=.env.local scripts/seed-contacts.ts"
   },
   "dependencies": {

@@ -1,7 +1,12 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { createContact, DuplicateEmailError, type NewContact } from "@/lib/contacts";
+import {
+  createContact,
+  deleteContact,
+  DuplicateEmailError,
+  type NewContact,
+} from "@/lib/contacts";
 
 // What the user typed, kept as strings so the form can be refilled after an error.
 export type ContactFormValues = {
@@ -103,4 +108,31 @@ export async function createContactAction(
     errors: {},
     values: { name: "", company: "", email: "", phone: "", lastContacted: "", notes: "" },
   };
+}
+
+export type DeleteContactState = { error: string | null };
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function deleteContactAction(
+  _prevState: DeleteContactState,
+  formData: FormData,
+): Promise<DeleteContactState> {
+  // Server Actions can be called with any data, so check the id before using it.
+  const id = formData.get("id");
+  if (typeof id !== "string" || !UUID_PATTERN.test(id)) {
+    return { error: "Invalid contact." };
+  }
+
+  try {
+    // An already-deleted contact counts as success: the goal (it's gone) is met.
+    await deleteContact(id);
+  } catch (error) {
+    // Log only the message: never the connection string.
+    console.error("deleteContact failed:", error instanceof Error ? error.message : error);
+    return { error: "Could not delete the contact. Please try again." };
+  }
+
+  refresh(); // re-render the page so the deleted contact disappears
+  return { error: null };
 }

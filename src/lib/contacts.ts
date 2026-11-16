@@ -113,3 +113,12 @@ export async function createContact(input: NewContact): Promise<Contact> {
     throw error;
   }
 }
+
+// Returns true if a contact was deleted, false if no contact had that id.
+export async function deleteContact(id: string): Promise<boolean> {
+  const rows = await query<{ id: string }>(
+    "DELETE FROM contacts WHERE id = $1 RETURNING id",
+    [id],
+  );
+  return rows.length > 0;
+}

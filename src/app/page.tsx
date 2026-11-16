@@ -13,6 +13,14 @@ async function ContactList() {
       {contacts.map((contact) => (
         <li key={contact.id}>
           <strong>{contact.name}</strong> {contact.company ? <>— {contact.company}</> : null}
+          {contact.email ?
+            <>
+              <br />
+              Email: {contact.email}</> : null}
+          {contact.phone ?
+            <>
+              <br />
+              Phone: {contact.phone}</> : null}
           <br />
           {contact.notes}
           {contact.lastContacted ?

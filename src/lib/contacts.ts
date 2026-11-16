@@ -9,6 +9,8 @@ type ContactRow = {
   company: string | null;
   notes: string;
   last_contacted: string | null; // cast to text in SQL, e.g. "2026-10-15"
+  email: string | null;
+  phone: string | null;
 };
 
 function toContact(row: ContactRow): Contact {
@@ -18,6 +20,8 @@ function toContact(row: ContactRow): Contact {
     company: row.company,
     notes: row.notes,
     lastContacted: row.last_contacted,
+    email: row.email,
+    phone: row.phone,
   };
 }
 
@@ -30,7 +34,7 @@ export async function getContacts(): Promise<Contact[]> {
     // last_contacted::text avoids pg turning a date into a JS Date at local
     // midnight, which can shift the day when converted back to a string.
     const rows = await query<ContactRow>(
-      `SELECT id, name, company, notes, last_contacted::text AS last_contacted
+      `SELECT id, name, company, notes, last_contacted::text AS last_contacted, email, phone
        FROM contacts
        ORDER BY name`,
     );

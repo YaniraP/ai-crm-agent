@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { getContacts } from "@/lib/contacts";
+import { ContactForm } from "./contact-form";
 
 async function ContactList() {
   const contacts = await getContacts();
@@ -21,15 +22,18 @@ async function ContactList() {
             <>
               <br />
               Phone: {contact.phone}</> : null}
-          <br />
-          {contact.notes}
+          {contact.notes ?
+            <>
+              <br />
+              Notes: {contact.notes}</> : null}
           {contact.lastContacted ?
             <>
               <br />
               Last contacted: {contact.lastContacted}</> : null}
         </li>
-      ))}
-    </ul>
+      ))
+      }
+    </ul >
   );
 }
 
@@ -37,6 +41,11 @@ export default function Home() {
   return (
     <main>
       <h1>Contacts</h1>
+      <section>
+        <h2>Add contact</h2>
+        <ContactForm />
+      </section>
+      <h2>All contacts</h2>
       <Suspense fallback={<p>Loading contacts…</p>}>
         <ContactList />
       </Suspense>

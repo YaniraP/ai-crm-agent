@@ -2,7 +2,8 @@ import type { Contact } from "@/types/contact";
 
 // Seed-only data. Fixed UUIDs are the seed's unique key: the seed inserts with
 // ON CONFLICT (id) DO NOTHING, so re-running it never creates duplicates.
-export const seedContacts: Contact[] = [
+// email and phone are optional and not seeded, so they are left out here.
+export const seedContacts: Omit<Contact, "email" | "phone">[] = [
   {
     id: "00000000-0000-4000-8000-000000000001",
     name: "Alice Johnson",

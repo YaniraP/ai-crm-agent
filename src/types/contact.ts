@@ -4,4 +4,6 @@ export type Contact = {
   notes: string;
   lastContacted: string | null; // ISO date string, e.g. "2026-10-15" - null is never contacted
   company: string | null;
+  email: string | null; // stored trimmed and lowercase
+  phone: string | null;
 };

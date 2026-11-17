@@ -19,9 +19,9 @@ type ContactRow = {
 const CONTACT_COLUMNS =
   "id, name, company, notes, last_contacted::text AS last_contacted, email, phone";
 
-// Input for a new contact, already cleaned by the caller.
+// Input to create or update a contact, already cleaned by the caller.
 // null means "empty": nullable columns store NULL, notes uses its DEFAULT.
-export type NewContact = {
+export type ContactInput = {
   name: string;
   company: string | null;
   email: string | null; // already trimmed and lowercase
@@ -82,9 +82,21 @@ export async function getContacts(): Promise<Contact[]> {
   }
 }
 
-export async function createContact(input: NewContact): Promise<Contact> {
-  // Every value goes in as a $n parameter. The only text chosen by code is
-  // the keyword DEFAULT for empty notes (the column is NOT NULL DEFAULT '').
+// Every value goes in as a $n parameter. The only text chosen by code is the
+// keyword DEFAULT for empty notes (the column is NOT NULL DEFAULT '').
+// Returns the SQL to use for notes: "DEFAULT" or the next "$n".
+function notesSql(params: unknown[], notes: string | null): string {
+  if (notes === null) return "DEFAULT";
+  params.push(notes);
+  return `$${params.length}`;
+}
+
+// Turns a duplicate-email error from Postgres into DuplicateEmailError.
+function toAppError(error: unknown): unknown {
+  return isUniqueViolation(error, "contacts_email_key") ? new DuplicateEmailError() : error;
+}
+
+export async function createContact(input: ContactInput): Promise<Contact> {
   const params: unknown[] = [
     input.name,
     input.company,
@@ -92,11 +104,7 @@ export async function createContact(input: NewContact): Promise<Contact> {
     input.phone,
     input.lastContacted,
   ];
-  let notesValue = "DEFAULT";
-  if (input.notes !== null) {
-    params.push(input.notes);
-    notesValue = `$${params.length}`;
-  }
+  const notesValue = notesSql(params, input.notes);
 
   try {
     const rows = await query<ContactRow>(
@@ -107,10 +115,34 @@ export async function createContact(input: NewContact): Promise<Contact> {
     );
     return toContact(rows[0]);
   } catch (error) {
-    if (isUniqueViolation(error, "contacts_email_key")) {
-      throw new DuplicateEmailError();
-    }
-    throw error;
+    throw toAppError(error);
+  }
+}
+
+// Returns the updated contact, or null if no contact had that id.
+export async function updateContact(id: string, input: ContactInput): Promise<Contact | null> {
+  const params: unknown[] = [
+    id,
+    input.name,
+    input.company,
+    input.email,
+    input.phone,
+    input.lastContacted,
+  ];
+  const notesValue = notesSql(params, input.notes);
+
+  try {
+    const rows = await query<ContactRow>(
+      `UPDATE contacts
+       SET name = $2, company = $3, email = $4, phone = $5, last_contacted = $6,
+           notes = ${notesValue}
+       WHERE id = $1
+       RETURNING ${CONTACT_COLUMNS}`,
+      params,
+    );
+    return rows.length > 0 ? toContact(rows[0]) : null;
+  } catch (error) {
+    throw toAppError(error);
   }
 }
 

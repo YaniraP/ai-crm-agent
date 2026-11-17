@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getContacts } from "@/lib/contacts";
 import { ContactForm } from "./contact-form";
 import { DeleteContactButton } from "./delete-contact-button";
+import { EditContact } from "./edit-contact";
 
 async function ContactList() {
   const contacts = await getContacts();
@@ -31,6 +32,7 @@ async function ContactList() {
             <>
               <br />
               Last contacted: {contact.lastContacted}</> : null}
+          <EditContact contact={contact} />
           <DeleteContactButton id={contact.id} name={contact.name} />
         </li>
       ))

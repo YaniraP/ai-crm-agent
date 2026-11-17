@@ -62,16 +62,37 @@ function toContact(row: ContactRow): Contact {
   };
 }
 
-export async function getContacts(): Promise<Contact[]> {
+const MAX_SEARCH_LENGTH = 100;
+
+// Characters with a special meaning in a regular expression.
+const REGEX_SPECIAL_CHARS = /[.*+?^${}()|[\]\\]/g;
+
+// Builds the regex for "a word starts with the search", or null for no search.
+// - Escaping: a backslash before each special character makes the regex treat
+//   it literally, so "(" or ".*" can't break or widen the search.
+// - \m is "start of a word" in Postgres regex; ~* makes it case-insensitive.
+function toWordStartPattern(search: string | undefined): string | null {
+  const text = search?.trim().slice(0, MAX_SEARCH_LENGTH) ?? "";
+  if (text === "") return null;
+  return "\\m" + text.replace(REGEX_SPECIAL_CHARS, "\\$&");
+}
+
+// The only way to read contacts. With a search, returns contacts whose name
+// or company has a word starting with it (case-insensitive).
+export async function getContacts(search?: string): Promise<Contact[]> {
   // Request-time I/O: keep this out of the prerendered static shell,
   // so edits in the database show up on reload.
   await io();
 
   try {
+    // One fixed SQL text: the pattern travels as $1 (never pasted into the SQL).
+    // $1 IS NULL means "no search", so every contact is returned.
     const rows = await query<ContactRow>(
       `SELECT ${CONTACT_COLUMNS}
        FROM contacts
+       WHERE $1::text IS NULL OR name ~* $1 OR company ~* $1
        ORDER BY name`,
+      [toWordStartPattern(search)],
     );
     return rows.map(toContact);
   } catch (error) {

@@ -3,6 +3,7 @@ import { getContacts } from "@/lib/contacts";
 import { ContactForm } from "./contact-form";
 import { DeleteContactButton } from "./delete-contact-button";
 import { EditContact } from "./edit-contact";
+import { FollowUpEmail } from "./follow-up-email";
 import { SearchForm } from "./search-form";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -59,6 +60,7 @@ async function ContactList({ q }: { q: string }) {
               Last contacted: {contact.lastContacted}</> : null}
           <EditContact contact={contact} />
           <DeleteContactButton id={contact.id} name={contact.name} />
+          <FollowUpEmail contactId={contact.id} />
         </li>
       ))
       }

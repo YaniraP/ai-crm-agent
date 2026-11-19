@@ -1,10 +1,12 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { AiRateLimitError, generateFollowUpEmail, type FollowUpEmail } from "@/lib/ai";
 import {
   createContact,
   deleteContact,
   DuplicateEmailError,
+  getContact,
   updateContact,
   type ContactInput,
 } from "@/lib/contacts";
@@ -196,4 +198,40 @@ export async function deleteContactAction(
 
   refresh(); // re-render the page so the deleted contact disappears
   return { error: null };
+}
+
+export type FollowUpState = {
+  email: FollowUpEmail | null; // the last generated email, kept while regenerating
+  error: string | null; // friendly text only, never technical details
+};
+
+export async function generateFollowUpAction(
+  prevState: FollowUpState,
+  formData: FormData,
+): Promise<FollowUpState> {
+  const id = readId(formData);
+  if (!id) {
+    return { email: prevState.email, error: "Invalid contact." };
+  }
+
+  try {
+    // Read the contact from the database: never trust contact data from the browser.
+    const contact = await getContact(id);
+    if (!contact) {
+      return { email: null, error: "This contact no longer exists." };
+    }
+    return { email: await generateFollowUpEmail(contact), error: null };
+  } catch (error) {
+    // Log only the error name and message: no key, no contact data.
+    console.error(
+      "generateFollowUp failed:",
+      error instanceof Error ? `${error.name}: ${error.message}` : error,
+    );
+    const message =
+      error instanceof AiRateLimitError
+        ? "Too many requests. Wait a minute and try again."
+        : "Couldn't generate the message. Please try again.";
+    // Keep the previous email (if any) so a failed regenerate doesn't lose it.
+    return { email: prevState.email, error: message };
+  }
 }

@@ -167,6 +167,15 @@ export async function updateContact(id: string, input: ContactInput): Promise<Co
   }
 }
 
+// One contact by id, or null if it doesn't exist.
+export async function getContact(id: string): Promise<Contact | null> {
+  const rows = await query<ContactRow>(
+    `SELECT ${CONTACT_COLUMNS} FROM contacts WHERE id = $1`,
+    [id],
+  );
+  return rows.length > 0 ? toContact(rows[0]) : null;
+}
+
 // Returns true if a contact was deleted, false if no contact had that id.
 export async function deleteContact(id: string): Promise<boolean> {
   const rows = await query<{ id: string }>(

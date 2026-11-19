@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:schema": "tsx --env-file=.env.local scripts/apply-schema.ts",
     "db:migrate": "tsx --env-file=.env.local scripts/migrate.ts",
-    "seed:contacts": "tsx --env-file=.env.local scripts/seed-contacts.ts"
+    "seed:contacts": "tsx --env-file=.env.local scripts/seed-contacts.ts",
+    "ai:try": "tsx --env-file=.env.local scripts/try-follow-up.ts"
   },
   "dependencies": {
     "next": "^16.4.6",

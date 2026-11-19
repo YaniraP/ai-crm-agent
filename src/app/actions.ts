@@ -10,6 +10,7 @@ import {
   updateContact,
   type ContactInput,
 } from "@/lib/contacts";
+import { hasUsableNotes, NO_NOTES_MESSAGE } from "@/lib/follow-up-rules";
 
 // What the user typed, kept as strings so the form can be refilled after an error.
 export type ContactFormValues = {
@@ -203,6 +204,7 @@ export async function deleteContactAction(
 export type FollowUpState = {
   email: FollowUpEmail | null; // the last generated email, kept while regenerating
   error: string | null; // friendly text only, never technical details
+  recipient: string | null; // contact's email from the database, never from the AI
 };
 
 export async function generateFollowUpAction(
@@ -211,16 +213,23 @@ export async function generateFollowUpAction(
 ): Promise<FollowUpState> {
   const id = readId(formData);
   if (!id) {
-    return { email: prevState.email, error: "Invalid contact." };
+    return { ...prevState, error: "Invalid contact." };
   }
 
   try {
     // Read the contact from the database: never trust contact data from the browser.
     const contact = await getContact(id);
     if (!contact) {
-      return { email: null, error: "This contact no longer exists." };
+      return { email: null, error: "This contact no longer exists.", recipient: null };
     }
-    return { email: await generateFollowUpEmail(contact), error: null };
+    // Checked here too: the action can be called even if the button is disabled.
+    // Returns before the AI call, so no request is made. Clears any old email,
+    // since it was based on notes that are gone now.
+    if (!hasUsableNotes(contact.notes)) {
+      return { email: null, error: NO_NOTES_MESSAGE, recipient: null };
+    }
+    const email = await generateFollowUpEmail(contact);
+    return { email, error: null, recipient: contact.email };
   } catch (error) {
     // Log only the error name and message: no key, no contact data.
     console.error(
@@ -232,6 +241,6 @@ export async function generateFollowUpAction(
         ? "Too many requests. Wait a minute and try again."
         : "Couldn't generate the message. Please try again.";
     // Keep the previous email (if any) so a failed regenerate doesn't lose it.
-    return { email: prevState.email, error: message };
+    return { ...prevState, error: message };
   }
 }

@@ -15,11 +15,13 @@ const sampleContact: Contact = {
 
 async function main(): Promise<void> {
   const email = await generateFollowUpEmail(sampleContact);
-  const wordsBeforeSignature = email.body.split("\n\nBest,")[0].split(/\s+/).length;
+  // Only the AI's part: between the greeting line and the signature.
+  const aiText = email.body.split("\n\nBest,")[0].split("\n\n").slice(1).join(" ");
+  const aiWords = aiText.split(/\s+/).filter(Boolean).length;
 
   console.log(`Subject: ${email.subject}\n`);
   console.log(email.body);
-  console.log(`\n(${wordsBeforeSignature} words before the signature)`);
+  console.log(`\n(${aiWords} words written by the AI, between greeting and signature)`);
 }
 
 main().catch((error: unknown) => {
